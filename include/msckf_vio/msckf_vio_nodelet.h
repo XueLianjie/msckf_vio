@@ -19,8 +19,8 @@ public:
   ~MsckfVioNodelet() { return; }
 
 private:
-  virtual void onInit();
-  MsckfVioPtr msckf_vio_ptr;
+  virtual void onInit(); // member function
+  MsckfVioPtr msckf_vio_ptr; // data member
 };
 } // end namespace msckf_vio
 

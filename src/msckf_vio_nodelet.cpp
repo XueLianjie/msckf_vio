@@ -8,8 +8,9 @@
 #include <msckf_vio/msckf_vio_nodelet.h>
 
 namespace msckf_vio {
-void MsckfVioNodelet::onInit() {
-  msckf_vio_ptr.reset(new MsckfVio(getPrivateNodeHandle()));
+// onInit equals main function
+void MsckfVioNodelet::onInit() {  
+  msckf_vio_ptr.reset(new MsckfVio(getPrivateNodeHandle())); // shared_ptr point to a new object pointer, node handle means a pointer to a node
   if (!msckf_vio_ptr->initialize()) {
     ROS_ERROR("Cannot initialize MSCKF VIO...");
     return;

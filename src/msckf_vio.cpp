@@ -545,8 +545,9 @@ void MsckfVio::processModel(const double& time,
   IMUState& imu_state = state_server.imu_state;
   Vector3d gyro = m_gyro - imu_state.gyro_bias;
   Vector3d acc = m_acc - imu_state.acc_bias;
-  double dtime = time - imu_state.time;
+  double dtime = time - imu_state.time; // first time equals to zero, otherwise 50ms
 
+  // linearize the motion model at img receiving time stamp to get F, G and P 
   // Compute discrete transition and noise covariance matrix
   Matrix<double, 21, 21> F = Matrix<double, 21, 21>::Zero();
   Matrix<double, 21, 12> G = Matrix<double, 21, 12>::Zero();

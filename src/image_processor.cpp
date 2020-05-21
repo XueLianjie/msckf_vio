@@ -318,7 +318,7 @@ void ImageProcessor::initializeFirstFrame() {
 
   // Detect new features on the frist image.
   vector<KeyPoint> new_features(0);
-  detector_ptr->detect(img, new_features);
+  detector_ptr->detect(img, new_features); // fast 
 
   // Find the stereo matched points for the newly
   // detected features.
@@ -962,6 +962,7 @@ void ImageProcessor::integrateImuData(
   return;
 }
 
+// rescaled by average / sqrt(2.0f)
 void ImageProcessor::rescalePoints(
     vector<Point2f>& pts1, vector<Point2f>& pts2,
     float& scaling_factor) {
