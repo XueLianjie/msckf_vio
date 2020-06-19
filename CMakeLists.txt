@@ -129,6 +129,11 @@ target_link_libraries(image_processor_nodelet
   ${catkin_LIBRARIES}
 )
 
+add_executable(test_imu src/test_imu.cpp)
+target_link_libraries(test_imu
+  
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
