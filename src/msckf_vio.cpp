@@ -217,7 +217,7 @@ bool MsckfVio::initialize() {
   for (int i = 1; i < 100; ++i) {
     boost::math::chi_squared chi_squared_dist(i);
     chi_squared_test_table[i] =
-      boost::math::quantile(chi_squared_dist, 0.05);
+      boost::math::quantile(chi_squared_dist, 0.05); // 0.95 quantile 
   }
 
   if (!createRosIO()) return false;
@@ -390,6 +390,7 @@ void MsckfVio::featureCallback(
 
   // Add new observations for existing features or new
   // features in the map server.
+  // 将特征点放到对应的map server里面，如果已经有了则增加观测项
   start_time = ros::Time::now();
   addFeatureObservations(msg);
   double add_observations_time = (
@@ -755,7 +756,7 @@ void MsckfVio::stateAugmentation(const double& time) {
   return;
 }
 
-void MsckfVio::addFeatureObservations(
+void MsckfVio::addFeatureObservations( // stereo camera so u0 v0, u1 v1 4 datas
     const CameraMeasurementConstPtr& msg) {
 
   StateIDType state_id = state_server.imu_state.id;
