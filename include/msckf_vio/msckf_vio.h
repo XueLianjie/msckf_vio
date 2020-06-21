@@ -117,6 +117,12 @@ class MsckfVio {
     void initializeGravityAndBias();
 
     /*
+     * @brief checkIMUStatic
+     *    Check if the IMU is static for intialize 
+     */
+    void checkIMUStatic();
+
+    /*
      * @biref resetCallback
      *    Callback function for the reset service.
      *    Note that this is NOT anytime-reset. This function should
