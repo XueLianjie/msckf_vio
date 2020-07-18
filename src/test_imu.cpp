@@ -7,6 +7,9 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf_conversions/tf_eigen.h>
 
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include <Eigen/QR>
 #include <Eigen/SPQRSupport>
 #include <Eigen/SVD>
@@ -22,6 +25,88 @@
 #include "std_msgs/String.h"
 
 using namespace std;
+const int MatrixSize = 50;
+
+void testEigen() {
+  Eigen::Matrix<float, 2, 3> matrix_23;
+  Eigen::Vector3d vec_3d;
+  Eigen::Matrix3d matrix_33d;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> matrix_dynamic;
+  Eigen::MatrixXd matrix_xd;
+  matrix_23 << 1, 0, 0, 0, 1, 0;
+  cout << matrix_23 << endl;
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      cout << matrix_23(i, j) << endl;
+    }
+  }
+
+  vec_3d << 1, 0, 0;
+  Eigen::Matrix<double, 2, 1> result = matrix_23.cast<double>() * vec_3d;
+  cout << result << endl;
+  // Eigen::Matrix<double, 3, 1> result_error_dimention =
+  //     matrix_23.cast<double>() * vec_3d;
+  matrix_33d = Eigen::Matrix3d::Random();
+  cout << "random matrix33d: " << matrix_33d << endl;
+  cout << matrix_33d.transpose() << endl;
+  cout << matrix_33d.inverse() << endl;
+  cout << matrix_33d.sum() << endl;
+  cout << matrix_33d.trace() << endl;
+  cout << 10 * matrix_33d << endl;
+  cout << matrix_33d.determinant() << endl;
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen_solver(
+      matrix_33d.transpose() * matrix_33d);
+  cout << "eigen value: " << eigen_solver.eigenvalues() << endl;
+  cout << "eigen vectors: " << eigen_solver.eigenvectors() << endl;
+
+  Eigen::Matrix<double, MatrixSize, MatrixSize> matrix_NN;
+  matrix_NN = Eigen::MatrixXd::Random(MatrixSize, MatrixSize);
+  Eigen::Matrix<double, MatrixSize, 1> v_Nd;
+  v_Nd = Eigen::MatrixXd::Random(MatrixSize, 1);
+
+  clock_t time_stt = clock();
+  Eigen::Matrix<double, MatrixSize, 1> x = matrix_NN.inverse() * v_Nd;
+  cout << "just inverse matrix cost "
+       << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
+
+  time_stt = clock();
+  x = matrix_NN.colPivHouseholderQr().solve(v_Nd);
+  cout << "time use in Qr composition is "
+       << 1000 * (clock() - time_stt) / (double)CLOCKS_PER_SEC << "ms" << endl;
+
+  Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+  Eigen::AngleAxisd rotation_vector(M_PI / 4, Eigen::Vector3d(0, 0, 1));
+  cout << rotation_vector.matrix() << endl;
+  cout << "rotation matrix \n" << rotation_vector.matrix() << endl;
+  rotation_matrix = rotation_vector.toRotationMatrix();
+  Eigen::Vector3d v(1, 0, 0);
+  Eigen::Vector3d v_rotated = rotation_vector * v;
+  cout << "v rotated " << v_rotated.transpose() << endl;
+
+  Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);
+  cout << "y p r " << euler_angles.transpose() << endl;
+
+  Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
+  T.rotate(rotation_vector);
+  T.pretranslate(Eigen::Vector3d(1, 3, 4));
+  cout << "T \n " << T.matrix() << endl;
+  Eigen::Vector3d v_transformed = T * v;
+  cout << "v transformed " << v_transformed.transpose() << endl;
+
+  Eigen::Quaterniond q = Eigen::Quaterniond(rotation_vector);
+  cout << "quaternion \n " << q.coeffs() << endl;
+
+  q = Eigen::Quaterniond(rotation_matrix);
+  cout << "quaternion = \n " << q.coeffs() << endl;
+
+  v_rotated = q * v;
+  cout << "1 0 0 -> " << v_rotated.transpose() << endl;
+
+  return;
+  // Eigen::Matrix<double, MatrixSize, 1>
+}
+
 vector<sensor_msgs::Imu> imuBuffer;
 vector<sensor_msgs::Imu> batchImuBuffer;
 double last_time;
@@ -50,6 +135,7 @@ void predict(double dt, const sensor_msgs::Imu &imu_msg) {
   dq_tmp.y() = un_gyro.y() * dt / 2.0;
   dq_tmp.z() = un_gyro.z() * dt / 2.0;
   dq_tmp.w() = 1.0;
+  dq_tmp.normalize();
   q_0 = q_0 * dq_tmp;
   Eigen::Vector3d un_acc_1 = q_0 * (m_acc - ba_0) + gravity_w;
   Eigen::Vector3d un_acc = 0.5 * (un_acc_0 + un_acc_1);
@@ -187,6 +273,8 @@ void imuCallback(const sensor_msgs::ImuConstPtr &msg) {
 }
 
 int main(int argc, char **argv) {
+  testEigen();
+
   ros::init(argc, argv, "imu_listener");
 
   ros::NodeHandle n;

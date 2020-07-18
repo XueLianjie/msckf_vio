@@ -580,6 +580,7 @@ void MsckfVio::processModel(const double& time,
   predictNewState(dtime, gyro, acc);
 
   // Modify the transition matrix
+  // 
   Matrix3d R_kk_1 = quaternionToRotation(imu_state.orientation_null);
   Phi.block<3, 3>(0, 0) =
     quaternionToRotation(imu_state.orientation) * R_kk_1.transpose();
@@ -599,6 +600,7 @@ void MsckfVio::processModel(const double& time,
   Phi.block<3, 3>(12, 0) = A2 - (A2*u-w2)*s;
 
   // Propogate the state covariance matrix.
+    
   Matrix<double, 21, 21> Q = Phi*G*state_server.continuous_noise_cov*
     G.transpose()*Phi.transpose()*dtime;
   state_server.state_cov.block<21, 21>(0, 0) =
@@ -641,7 +643,7 @@ void MsckfVio::predictNewState(const double& dt,
   Omega.block<3, 1>(0, 3) = gyro;
   Omega.block<1, 3>(3, 0) = -gyro;
 
-  Vector4d& q = state_server.imu_state.orientation;
+  Vector4d& q = state_server.imu_state.orientation; // pass by reference
   Vector3d& v = state_server.imu_state.velocity;
   Vector3d& p = state_server.imu_state.position;
 
@@ -981,6 +983,7 @@ void MsckfVio::measurementUpdate(
     //return;
   }
 
+  // update current state of imu
   const Vector4d dq_imu =
     smallAngleQuaternion(delta_x_imu.head<3>());
   state_server.imu_state.orientation = quaternionMultiplication(
